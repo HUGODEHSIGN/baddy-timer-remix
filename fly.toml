@@ -1,0 +1,20 @@
+# fly.toml app configuration file generated for baddy-timer on 2024-06-26T18:38:33-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'baddy-timer'
+primary_region = 'ewr'
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'
