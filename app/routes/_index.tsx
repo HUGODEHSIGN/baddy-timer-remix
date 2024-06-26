@@ -1,5 +1,6 @@
 import type { MetaFunction } from '@remix-run/node';
 import { useEffect, useState } from 'react';
+import { Button } from '~/components/ui/button';
 import { socket } from '~/socket/socket';
 
 export const meta: MetaFunction = () => {
@@ -45,9 +46,9 @@ export default function Index() {
           <p key={value}>{value}</p>
         ))}
       </div>
-      <button onClick={() => socket.emit('foo', 'hello world!')}>
+      <Button onClick={() => socket.emit('foo', 'hello world!')}>
         connect
-      </button>
+      </Button>
     </div>
   );
 }
