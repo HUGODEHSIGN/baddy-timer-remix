@@ -6,7 +6,7 @@ const connectionString =
     : process.env.DATABASE_URL_DEV!;
 
 export default defineConfig({
-  schema: './app/db/schema.ts',
+  schema: './app/db/schemas/*',
   dialect: 'postgresql',
   dbCredentials: {
     url: connectionString!,

@@ -29,7 +29,9 @@ export default function Page() {
 
   return (
     <div>
-      <p>{user.user_session}</p>
+      <p>{user.id}</p>
+      <p>{user.name}</p>
+      <p>{user.locationId}</p>
       <Form method="post">
         <Button type="submit">logout</Button>
       </Form>
