@@ -16,6 +16,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Page() {
   const user = useLoaderData<typeof loader>();
+
   return (
     <div>
       <p>{user.user_session}</p>
