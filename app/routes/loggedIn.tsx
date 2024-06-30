@@ -1,33 +1,18 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { Form, useLoaderData } from '@remix-run/react';
-import { $path } from 'remix-routes';
+import { LoaderFunctionArgs } from '@remix-run/node';
+import { useLoaderData } from '@remix-run/react';
 import invariant from 'tiny-invariant';
-import { Button } from '~/components/ui/button';
-import { userAuthenticator } from '~/services/user/userAuth.server';
+import { lucia } from '~/db/lucia.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  return await userAuthenticator.isAuthenticated(request, {
-    failureRedirect: $path('/signup'),
-  });
+  const cookie = lucia.readSessionCookie(request.headers.get('Cookie')!);
+
+  invariant(cookie, 'Session cookie not found');
+
+  const session = await lucia.validateSession(cookie);
+  return session;
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-  return await userAuthenticator.logout(request, {
-    redirectTo: $path('/signup'),
-  });
-}
-
-export default function Page() {
-  const user = useLoaderData<typeof loader>();
-
-  invariant(user, 'User must be defined in the component');
-
-  return (
-    <div>
-      <p>{user.id}</p>
-      <Form method="post">
-        <Button type="submit">logout</Button>
-      </Form>
-    </div>
-  );
+export default function LoggedInPage() {
+  const data = useLoaderData<typeof loader>();
+  return <div>{data.user?.username}</div>;
 }
