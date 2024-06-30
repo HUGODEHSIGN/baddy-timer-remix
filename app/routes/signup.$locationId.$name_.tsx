@@ -4,13 +4,25 @@ import { ActionFunctionArgs } from '@remix-run/node';
 import { Form, useActionData, useParams } from '@remix-run/react';
 import { $params, $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
+import { z } from 'zod';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { zInsertUser } from '~/db/schemas/user';
-import { authenticator } from '~/services/auth.server';
+import { userAuthenticator } from '~/services/user/userAuth.server';
 
-const schema = zInsertUser;
+const schema = z.object({
+  name: z
+    .string({ required_error: 'Name is required' })
+    .min(2, 'Name is too short')
+    .max(20, 'Name is too long'),
+  locationId: z
+    .string({ required_error: 'LocationId is required' })
+    .cuid2('Not a valid location id'),
+  phone: z
+    .string()
+    .regex(/^\+[1-9]\d{1,14}$/, 'Invalid Phone Number')
+    .optional(),
+});
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const { locationId } = $params('/signup/:locationId/:name', params);
@@ -21,7 +33,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   if (submission.status !== 'success') return submission.reply();
 
-  return await authenticator.authenticate('user', request, {
+  return await userAuthenticator.authenticate('user', request, {
     successRedirect: $path('/loggedIn'),
   });
 }
@@ -62,7 +74,7 @@ export default function Page() {
       <p className="text-sm font-medium text-destructive">
         {fields.phone.errors}
       </p>
-      <Button>Submit</Button>
+      <Button type="submit">Sign Up</Button>
     </Form>
   );
 }
