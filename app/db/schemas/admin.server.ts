@@ -5,6 +5,7 @@ export const admin = pgTable('admin', {
   id: varchar('id', { length: 128 })
     .$defaultFn(() => createId())
     .primaryKey(),
+  username: text('username').notNull(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   password: varchar('password', { length: 72 }).notNull(),
