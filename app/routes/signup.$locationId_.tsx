@@ -4,12 +4,17 @@ import { ActionFunctionArgs, redirect } from '@remix-run/node';
 import { Form, useActionData } from '@remix-run/react';
 import { $params, $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
+import { z } from 'zod';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { zInsertUser } from '~/db/schemas/user';
 
-const schema = zInsertUser.pick({ name: true });
+const schema = z.object({
+  name: z
+    .string({ required_error: 'Name is required' })
+    .min(2, 'Name is too short')
+    .max(20, 'Name is too long'),
+});
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const { locationId } = $params('/signup/:locationId', params);

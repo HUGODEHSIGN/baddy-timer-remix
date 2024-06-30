@@ -3,16 +3,20 @@ import { Authenticator } from 'remix-auth';
 import { FormStrategy } from 'remix-auth-form';
 import invariant from 'tiny-invariant';
 import { db } from '~/db/drizzle.server';
-import { InsertUser, user } from '~/db/schemas/user';
-import { sessionStorage } from '~/services/session.server';
+import { InsertUser, user } from '~/db/schemas/user.server';
+import { userSessionStorage } from '~/services/user/userSession.server';
 
 // Create an instance of the authenticator, pass a generic with what
 // strategies will return and will store in the session
 
-export const authenticator = new Authenticator<InsertUser>(sessionStorage);
+type userAuthenticator = Pick<InsertUser, 'id'>;
+
+export const userAuthenticator = new Authenticator<userAuthenticator>(
+  userSessionStorage
+);
 
 // Tell the Authenticator to use the form strategy
-authenticator.use(
+userAuthenticator.use(
   new FormStrategy(async ({ form }) => {
     console.log(form);
     const name = form.get('name')!.toString();
@@ -23,7 +27,7 @@ authenticator.use(
     const newUser = await db
       .insert(user)
       .values(userData)
-      .returning({ id: user.id, name: user.name, locationId: user.locationId });
+      .returning({ id: user.id });
 
     invariant(newUser, 'Failed to insert new user');
 

@@ -1,25 +1,20 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { Form, useLoaderData } from '@remix-run/react';
+import { $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
 import { Button } from '~/components/ui/button';
-import { authenticator } from '~/services/auth.server';
+import { userAuthenticator } from '~/services/user/userAuth.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  try {
-    const user = await authenticator.isAuthenticated(request, {
-      failureRedirect: '/login',
-    });
-
-    invariant(user, 'User must be defined in the loader');
-
-    return user;
-  } catch (err) {
-    console.error(err);
-  }
+  return await userAuthenticator.isAuthenticated(request, {
+    failureRedirect: $path('/signup'),
+  });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  return await authenticator.logout(request, { redirectTo: '/login' });
+  return await userAuthenticator.logout(request, {
+    redirectTo: $path('/signup'),
+  });
 }
 
 export default function Page() {
@@ -30,8 +25,6 @@ export default function Page() {
   return (
     <div>
       <p>{user.id}</p>
-      <p>{user.name}</p>
-      <p>{user.locationId}</p>
       <Form method="post">
         <Button type="submit">logout</Button>
       </Form>
