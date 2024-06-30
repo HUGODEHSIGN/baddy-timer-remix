@@ -11,6 +11,10 @@ import { adminAuthenticator } from '~/services/admin/adminAuth.server';
 
 const schema = z
   .object({
+    username: z
+      .string({ required_error: 'Username is required' })
+      .min(2, 'Username is too short')
+      .max(20, 'Username is too long'),
     firstName: z
       .string({ required_error: 'First Name is required' })
       .min(2, 'First name is too short')
@@ -66,6 +70,12 @@ export default function Page() {
     <Form
       method="post"
       {...getFormProps(form)}>
+      <Label htmlFor={fields.username.id}>Username</Label>
+      <Input {...getInputProps(fields.username, { type: 'text' })} />
+      <p className="text-sm font-medium text-destructive">
+        {fields.username.errors}
+      </p>
+
       <Label htmlFor={fields.firstName.id}>First Name</Label>
       <Input {...getInputProps(fields.firstName, { type: 'text' })} />
       <p className="text-sm font-medium text-destructive">
