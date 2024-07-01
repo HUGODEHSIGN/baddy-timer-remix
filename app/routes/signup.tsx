@@ -89,11 +89,11 @@ export default function LoginPage() {
       <p className="text-red-500">{fields.username.errors}</p>
 
       <Label htmlFor={fields.password.id}>Password</Label>
-      <Input {...getInputProps(fields.password, { type: 'text' })} />
+      <Input {...getInputProps(fields.password, { type: 'password' })} />
       <p className="text-red-500">{fields.password.errors}</p>
 
       <Label htmlFor={fields.confirmPassword.id}>Confirm Password</Label>
-      <Input {...getInputProps(fields.confirmPassword, { type: 'text' })} />
+      <Input {...getInputProps(fields.confirmPassword, { type: 'password' })} />
       <p className="text-red-500">{fields.confirmPassword.errors}</p>
       <Button type="submit">Submit</Button>
     </Form>
