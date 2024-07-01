@@ -1,9 +1,8 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, redirect, useLoaderData } from '@remix-run/react';
+import { LoaderFunctionArgs, json } from '@remix-run/node';
+import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { $path } from 'remix-routes';
-import invariant from 'tiny-invariant';
 import { Button } from '~/components/ui/button';
-import { lucia } from '~/db/lucia.server';
+import { action } from '~/routes/api.deleteUser';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -17,27 +16,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
   );
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-  const { session } = await validateRequest(request);
-  invariant(session, 'Unauthorized');
-  await lucia.invalidateSession(session.id);
-  const sessionCookie = lucia.createBlankSessionCookie();
-
-  return redirect($path('/login'), {
-    headers: {
-      'Set-Cookie': sessionCookie.serialize(),
-    },
-  });
-}
-
 export default function LoggedInPage() {
   const data = useLoaderData<typeof loader>();
-  console.log(data.session?.expiresAt);
+  const actionData = useActionData<typeof action>();
+  console.log(actionData);
   return (
     <>
       <div>{data.user?.username}</div>
-      <Form method="post">
+      <Form
+        action={$path('/api/logout')}
+        method="post">
         <Button type="submit">Sign Out</Button>
+      </Form>
+      <Form
+        action={$path('/api/deleteUser')}
+        method="post">
+        <Button
+          type="submit"
+          variant="destructive">
+          Delete User
+        </Button>
       </Form>
     </>
   );
