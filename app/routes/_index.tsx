@@ -1,6 +1,7 @@
 import type { MetaFunction } from '@remix-run/node';
 import { useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
+
 import { socket } from '~/socket/socket';
 
 export const meta: MetaFunction = () => {

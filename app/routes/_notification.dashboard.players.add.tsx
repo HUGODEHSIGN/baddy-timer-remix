@@ -13,6 +13,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { db } from '~/db/drizzle.server';
 import { InsertPlayer, playerTable } from '~/db/schemas/player.server';
+import { serializeNotification } from '~/services/auth/notifications';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 type Schema = Pick<InsertPlayer, 'firstName' | 'lastName'>;
@@ -52,7 +53,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
   await db.insert(playerTable).values(insertValues);
 
-  return redirect($path('/dashboard/players'));
+  return redirect($path('/dashboard/players'), {
+    headers: {
+      'Set-Cookie': await serializeNotification({
+        type: 'success',
+        message: 'Player Added',
+      }),
+    },
+  });
 }
 
 export default function AddPlayerPage() {
