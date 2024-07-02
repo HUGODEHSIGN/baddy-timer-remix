@@ -1,19 +1,25 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '~/components/ui/dialog';
 import useMediaQuery from '~/hooks/useMediaQuery';
+
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '~/components/ui/alert-dialog';
 
 import { useNavigate } from '@remix-run/react';
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { $path } from 'remix-routes';
+import { Button } from '~/components/ui/button';
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
@@ -21,16 +27,17 @@ import {
 type ResponsiveDialogProps = PropsWithChildren & {
   title: string;
   description: string;
-  closeButton?: string;
+  cancelButton?: string;
 };
 
 /**
- * Cancel needs to included externally and set to type='button'
+ * Cancel button is included in this component due to DialogClose issues
  */
-export default function ResponsiveDialog({
+export default function ResponsiveAlertDialog({
   children,
   title,
   description,
+  cancelButton = 'cancel',
 }: ResponsiveDialogProps) {
   const [open, setOpen] = useState(true);
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -50,17 +57,26 @@ export default function ResponsiveDialog({
 
   if (isDesktop) {
     return (
-      <Dialog
+      <AlertDialog
         open={open}
         onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <div>{children}</div>
-        </DialogContent>
-      </Dialog>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button
+                variant="outline"
+                type="button">
+                {cancelButton}
+              </Button>
+            </AlertDialogCancel>
+            {children}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   }
 
@@ -73,7 +89,16 @@ export default function ResponsiveDialog({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className="px-4">{children}</div>
+        <DrawerFooter>
+          {children}
+          <DrawerClose asChild>
+            <Button
+              variant="outline"
+              type="button">
+              {cancelButton}
+            </Button>
+          </DrawerClose>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

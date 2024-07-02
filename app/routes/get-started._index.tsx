@@ -2,7 +2,6 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
 import {
   ActionFunctionArgs,
-  json,
   LoaderFunctionArgs,
   redirect,
 } from '@remix-run/node';
@@ -26,11 +25,11 @@ const schema: z.ZodType<Schema> = z.object({
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user, headers } = await validateRequest(request);
+  const { session, user } = await validateRequest(request);
 
   if (!user) throw redirect($path('/login'));
 
-  return json({ session, user }, { headers });
+  return { session, user };
 }
 
 export async function action({ request }: ActionFunctionArgs) {

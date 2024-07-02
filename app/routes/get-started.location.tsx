@@ -1,6 +1,5 @@
 import {
   ActionFunctionArgs,
-  json,
   LoaderFunctionArgs,
   redirect,
 } from '@remix-run/node';
@@ -13,7 +12,7 @@ import { playerTable } from '~/db/schemas/player.server';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user, headers } = await validateRequest(request);
+  const { session, user } = await validateRequest(request);
 
   if (!user) throw redirect($path('/login'));
 
@@ -28,7 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const { firstName, lastName } = primaryPlayer[0];
 
-  return json({ session, user, firstName, lastName }, { headers });
+  return { session, user, firstName, lastName };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
