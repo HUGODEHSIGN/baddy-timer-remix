@@ -37,30 +37,40 @@ export async function action({ request }: ActionFunctionArgs) {
   });
   if (submission.status !== 'success') return submission.reply();
 
-  const { user } = await validateRequest(request);
+  try {
+    const { user } = await validateRequest(request);
 
-  invariant(user, 'Unauthorized');
+    invariant(user, 'Unauthorized');
 
-  const id = generateIdFromEntropySize(10);
+    const insertValues: InsertPlayer = {
+      id: generateIdFromEntropySize(10),
+      firstName: submission.value.firstName,
+      lastName: submission.value.lastName,
+      primary: false,
+      userId: user.id,
+    };
 
-  const insertValues: InsertPlayer = {
-    id,
-    firstName: submission.value.firstName,
-    lastName: submission.value.lastName,
-    primary: false,
-    userId: user.id,
-  };
+    await db.insert(playerTable).values(insertValues);
 
-  await db.insert(playerTable).values(insertValues);
-
-  return redirect($path('/dashboard/players'), {
-    headers: {
-      'Set-Cookie': await serializeNotification({
-        type: 'success',
-        message: 'Player Added',
-      }),
-    },
-  });
+    return redirect($path('/dashboard/players'), {
+      headers: {
+        'Set-Cookie': await serializeNotification({
+          type: 'success',
+          message: `${insertValues.firstName} ${insertValues.lastName} added`,
+        }),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return redirect($path('/dashboard/players'), {
+      headers: {
+        'Set-Cookie': await serializeNotification({
+          type: 'error',
+          message: 'Unable to add player',
+        }),
+      },
+    });
+  }
 }
 
 export default function AddPlayerPage() {
