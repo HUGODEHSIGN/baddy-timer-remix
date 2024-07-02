@@ -9,7 +9,7 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { db } from '~/db/drizzle.server';
 import { lucia } from '~/db/lucia.server';
-import { InsertUser, user } from '~/db/schemas/user.server';
+import { InsertUser, userTable } from '~/db/schemas/user.server';
 
 import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { Label } from '~/components/ui/label';
@@ -46,22 +46,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (submission.status !== 'success') return submission.reply();
 
-  const userId = generateIdFromEntropySize(10);
+  const id = generateIdFromEntropySize(10);
 
   const passwordHash = await bcrypt.hash(submission.value.password, 12);
 
   const insertValues: InsertUser = {
-    id: userId,
+    id,
     username: submission.value.username,
     passwordHash,
   };
 
-  await db.insert(user).values(insertValues);
+  await db.insert(userTable).values(insertValues);
 
-  const session = await lucia.createSession(userId, {});
+  const session = await lucia.createSession(id, {});
   const sessionCookie = lucia.createSessionCookie(session.id);
 
-  return redirect($path('/loggedIn'), {
+  return redirect($path('/get-started'), {
     headers: {
       'Set-Cookie': sessionCookie.serialize(),
     },

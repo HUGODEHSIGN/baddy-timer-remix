@@ -2,9 +2,9 @@
 import { DrizzlePostgreSQLAdapter } from '@lucia-auth/adapter-drizzle';
 import { Lucia } from 'lucia';
 import { db } from '~/db/drizzle.server';
-import { SelectUser, session, user } from '~/db/schemas/user.server';
+import { SelectUser, sessionTable, userTable } from '~/db/schemas/user.server';
 
-const adapter = new DrizzlePostgreSQLAdapter(db, session, user);
+const adapter = new DrizzlePostgreSQLAdapter(db, sessionTable, userTable);
 
 // expect error (see next section)
 export const lucia = new Lucia(adapter, {

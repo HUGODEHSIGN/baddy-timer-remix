@@ -1,8 +1,7 @@
 import { LoaderFunctionArgs, json } from '@remix-run/node';
-import { Form, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, useLoaderData } from '@remix-run/react';
 import { $path } from 'remix-routes';
 import { Button } from '~/components/ui/button';
-import { action } from '~/routes/api.deleteUser';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -18,8 +17,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function LoggedInPage() {
   const data = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
-  console.log(actionData);
   return (
     <>
       <div>{data.user?.username}</div>

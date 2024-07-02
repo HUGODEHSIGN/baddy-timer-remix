@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { $path } from 'remix-routes';
 import { db } from '~/db/drizzle.server';
 import { lucia } from '~/db/lucia.server';
-import { user as userTable } from '~/db/schemas/user.server';
+import { userTable } from '~/db/schemas/user.server';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 export async function action({ request }: ActionFunctionArgs) {

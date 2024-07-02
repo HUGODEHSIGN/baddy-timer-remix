@@ -11,7 +11,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { db } from '~/db/drizzle.server';
 import { lucia } from '~/db/lucia.server';
-import { InsertUser, user } from '~/db/schemas/user.server';
+import { InsertUser, userTable } from '~/db/schemas/user.server';
 
 type Schema = Pick<InsertUser, 'username'> & {
   password: string;
@@ -25,9 +25,9 @@ const schemaClient: z.ZodType<Schema> = z.object({
 const schemaServer: z.ZodType<Schema> = schemaClient.refine(
   async ({ username, password }) => {
     const existingUser = await db
-      .select({ passwordHash: user.passwordHash })
-      .from(user)
-      .where(eq(user.username, username));
+      .select({ passwordHash: userTable.passwordHash })
+      .from(userTable)
+      .where(eq(userTable.username, username));
 
     if (existingUser.length === 0) return false;
 
@@ -47,9 +47,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const username = submission.value.username;
   const existingUser = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(eq(user.username, username));
+    .select({ id: userTable.id })
+    .from(userTable)
+    .where(eq(userTable.username, username));
 
   const session = await lucia.createSession(existingUser[0].id, {});
   const sessionCookie = lucia.createSessionCookie(session.id);
