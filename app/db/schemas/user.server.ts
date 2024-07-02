@@ -1,21 +1,28 @@
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { location } from '~/db/schemas/location.server';
 
-export const user = pgTable('user', {
+export const userTable = pgTable('user', {
   id: text('id').primaryKey(),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  playerLocationId: text('player_location_id').references(() => location.id, {
+    onDelete: 'set null',
+  }),
+  adminLocationId: text('admin_location_id').references(() => location.id, {
+    onDelete: 'set null',
+  }),
 });
 
-export const session = pgTable('session', {
+export const sessionTable = pgTable('session', {
   id: text('id').primaryKey(),
   userId: text('user_id')
     .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
+    .references(() => userTable.id, { onDelete: 'cascade' }),
   expiresAt: timestamp('expires_at', {
     withTimezone: true,
     mode: 'date',
   }).notNull(),
 });
 
-export type SelectUser = typeof user.$inferSelect;
-export type InsertUser = typeof user.$inferInsert;
+export type SelectUser = typeof userTable.$inferSelect;
+export type InsertUser = typeof userTable.$inferInsert;
