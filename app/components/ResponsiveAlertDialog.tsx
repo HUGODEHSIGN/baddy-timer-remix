@@ -1,11 +1,13 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '~/components/ui/dialog';
 import useMediaQuery from '~/hooks/useMediaQuery';
+
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '~/components/ui/alert-dialog';
 
 import { useNavigate } from '@remix-run/react';
 import { PropsWithChildren, useEffect, useState } from 'react';
@@ -21,10 +23,9 @@ import {
 type ResponsiveDialogProps = PropsWithChildren & {
   title: string;
   description: string;
-  closeButton?: string;
 };
 
-export default function ResponsiveDialog({
+export default function ResponsiveAlertDialog({
   children,
   title,
   description,
@@ -47,17 +48,19 @@ export default function ResponsiveDialog({
 
   if (isDesktop) {
     return (
-      <Dialog
+      <AlertDialog
         open={open}
         onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <div>{children}</div>
-        </DialogContent>
-      </Dialog>
+        <AlertDialogTrigger>Open</AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {children}
+        </AlertDialogContent>
+      </AlertDialog>
     );
   }
 
@@ -70,7 +73,8 @@ export default function ResponsiveDialog({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className="px-4">{children}</div>
+
+        {children}
       </DrawerContent>
     </Drawer>
   );

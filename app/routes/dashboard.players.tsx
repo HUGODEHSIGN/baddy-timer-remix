@@ -19,9 +19,21 @@ export default function PlayersLayout() {
   return (
     <div>
       {players.map(({ id, firstName, lastName, primary }) => (
-        <p key={id}>
-          {firstName} {lastName}
-        </p>
+        <div
+          key={id}
+          className="flex flex-row">
+          <p>
+            {firstName} {lastName} {primary.toString()}
+          </p>
+          <Button>
+            <Link
+              to={$path('/dashboard/players/delete/:playerId', {
+                playerId: id,
+              })}>
+              Delete
+            </Link>
+          </Button>
+        </div>
       ))}
       <Button>
         <Link to={$path('/dashboard/players/add')}>Add a Player</Link>
