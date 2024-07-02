@@ -1,15 +1,15 @@
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { json, Link, Outlet, useLoaderData } from '@remix-run/react';
+import { Link, Outlet, useLoaderData } from '@remix-run/react';
 import { $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
 import { Button } from '~/components/ui/button';
 import { getPlayers } from '~/services/auth/getPlayers';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user, players, headers } = await getPlayers(request);
+  const { session, user, players } = await getPlayers(request);
   invariant(session && user, 'User not found');
 
-  return json({ players }, { headers });
+  return { players };
 }
 
 export default function PlayersLayout() {

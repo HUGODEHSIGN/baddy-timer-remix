@@ -4,13 +4,12 @@ import { playerTable } from '~/db/schemas/player.server';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 export async function getPlayers(request: Request) {
-  const { session, user, headers } = await validateRequest(request);
+  const { session, user } = await validateRequest(request);
 
   if (!user || !session)
     return {
       session,
       user,
-      headers,
       players: null,
     };
 
@@ -24,13 +23,13 @@ export async function getPlayers(request: Request) {
     .from(playerTable)
     .where(eq(playerTable.userId, user.id));
 
-  return { session, user, headers, players };
+  return { session, user, players };
 }
 
 export async function getPrimaryPlayer(request: Request) {
-  const { session, user, headers } = await validateRequest(request);
+  const { session, user } = await validateRequest(request);
 
-  if (!user || !session) return { session, user, headers, primaryPlayer: null };
+  if (!user || !session) return { session, user, primaryPlayer: null };
 
   const players = await db
     .select({
@@ -44,7 +43,7 @@ export async function getPrimaryPlayer(request: Request) {
 
   const primaryPlayer = players[0];
 
-  if (!primaryPlayer) return { session, user, headers, primaryPlayer: null };
+  if (!primaryPlayer) return { session, user, primaryPlayer: null };
 
-  return { session, user, headers, primaryPlayer };
+  return { session, user, primaryPlayer };
 }

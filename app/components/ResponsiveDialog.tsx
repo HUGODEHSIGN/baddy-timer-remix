@@ -24,6 +24,9 @@ type ResponsiveDialogProps = PropsWithChildren & {
   closeButton?: string;
 };
 
+/**
+ * Cancel needs to included externally and set to type='button'
+ */
 export default function ResponsiveDialog({
   children,
   title,
