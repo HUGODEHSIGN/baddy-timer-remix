@@ -1,7 +1,8 @@
-import { ActionFunctionArgs, HeadersArgs } from '@remix-run/node';
+import { ActionFunctionArgs } from '@remix-run/node';
 import { Form, redirect } from '@remix-run/react';
 import { eq } from 'drizzle-orm';
 import { $path } from 'remix-routes';
+import invariant from 'tiny-invariant';
 import ResponsiveAlertDialog from '~/components/ResponsiveAlertDialog';
 import { Button } from '~/components/ui/button';
 import { db } from '~/db/drizzle.server';
@@ -11,38 +12,38 @@ import { serializeNotification } from '~/services/auth/notifications';
 export async function action({ params }: ActionFunctionArgs) {
   const { playerId } = params;
 
-  if (!playerId) {
+  try {
+    invariant(playerId, 'Unauthorized');
+
+    const result = await db
+      .delete(playerTable)
+      .where(eq(playerTable.id, playerId))
+      .returning({
+        firstName: playerTable.firstName,
+        lastName: playerTable.lastName,
+      });
+
+    const deletedPlayer = result[0];
+
+    return redirect($path('/dashboard/players'), {
+      headers: {
+        'Set-Cookie': await serializeNotification({
+          type: 'success',
+          message: `${deletedPlayer.firstName} ${deletedPlayer.lastName} deleted`,
+        }),
+      },
+    });
+  } catch (error) {
+    console.error(error);
     return redirect($path('/dashboard/players'), {
       headers: {
         'Set-Cookie': await serializeNotification({
           type: 'error',
-          message: 'Unable to delete',
+          message: 'Unable to delete player',
         }),
       },
     });
   }
-
-  const result = await db
-    .delete(playerTable)
-    .where(eq(playerTable.id, playerId))
-    .returning({ deletedId: playerTable.id });
-
-  console.log(result);
-
-  return redirect($path('/dashboard/players'), {
-    headers: {
-      'Set-Cookie': await serializeNotification({
-        type: 'success',
-        message: 'Player deleted',
-      }),
-    },
-  });
-}
-
-export function headers({ actionHeaders }: HeadersArgs) {
-  return {
-    'X-Error': actionHeaders.get('X-Error'),
-  };
 }
 
 export default function DeletePlayerPage() {

@@ -19,7 +19,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function _notification() {
   const notification = useLoaderData<typeof loader>();
-  console.log(notification);
 
   function handleToast(notification: Notification) {
     type ToastLookup = Record<
