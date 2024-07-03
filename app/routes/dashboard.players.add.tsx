@@ -1,7 +1,7 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
 import { ActionFunctionArgs } from '@remix-run/node';
-import { Form, redirect, useActionData } from '@remix-run/react';
+import { Form, useActionData, useNavigation } from '@remix-run/react';
 import { generateIdFromEntropySize } from 'lucia';
 import { $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
@@ -13,6 +13,8 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { db } from '~/db/drizzle.server';
 import { InsertPlayer, playerTable } from '~/db/schemas/player.server';
+import useToast from '~/hooks/useToast';
+import { ToastData, ToastType } from '~/services/auth/toast';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 type Schema = Pick<InsertPlayer, 'firstName' | 'lastName'>;
@@ -34,63 +36,116 @@ export async function action({ request }: ActionFunctionArgs) {
   const submission = parseWithZod(formData, {
     schema,
   });
-  if (submission.status !== 'success') return submission.reply();
 
-  const { user } = await validateRequest(request);
+  try {
+    if (submission.status !== 'success')
+      throw new Error('Please fill out the form entirely');
 
-  invariant(user, 'Unauthorized');
+    const { user } = await validateRequest(request);
+    invariant(user, 'Unauthorized');
 
-  const id = generateIdFromEntropySize(10);
-
-  const insertValues: InsertPlayer = {
-    id,
-    firstName: submission.value.firstName,
-    lastName: submission.value.lastName,
-    primary: false,
-    userId: user.id,
-  };
-
-  await db.insert(playerTable).values(insertValues);
-
-  return redirect($path('/dashboard/players'));
+    const insertValues: InsertPlayer = {
+      id: generateIdFromEntropySize(10),
+      firstName: submission.value.firstName,
+      lastName: submission.value.lastName,
+      primary: false,
+      userId: user.id,
+    };
+    await db.insert(playerTable).values(insertValues);
+    return {
+      lastResult: submission.reply(),
+      toast: { type: 'success', message: 'Successfully added player' },
+    };
+  } catch (error) {
+    console.error(error);
+    let message;
+    if (error instanceof Error) message = error.message;
+    return {
+      lastResult: submission.reply(),
+      toast: { type: 'error', message },
+    };
+  }
 }
 
 export default function AddPlayerPage() {
-  const lastResult = useActionData<typeof action>();
+  const navigation = useNavigation();
+
+  const actionData = useActionData<typeof action>();
+
+  const { lastResult, toast } = actionData ?? {};
+
   const [form, fields] = useForm({
     lastResult,
     constraint: getZodConstraint(schema),
-    shouldValidate: 'onInput',
     shouldRevalidate: 'onInput',
     onValidate({ formData }) {
       return parseWithZod(formData, { schema });
     },
   });
 
+  const isSubmitting = navigation.state === 'submitting';
+
+  const toastData = new ToastData(
+    'add-player',
+    toast?.type as ToastType,
+    toast?.message
+  );
+
+  if (!form.valid)
+    toastData.setType('error').setMessage('Please fill out the form entirely');
+
+  if (isSubmitting) toastData.setType('loading').setMessage('Adding player...');
+
+  useToast(toastData);
+
+  const redirect = !isSubmitting && toast?.type === 'success';
+
   return (
     <ResponsiveDialog
       title="Add a Player"
-      description="Create a new player">
+      description="Create a new player"
+      form={form}
+      path={$path('/dashboard/players')}
+      redirect={redirect}>
       <Form
         method="post"
         {...getFormProps(form)}
-        className="flex flex-col gap-4">
+        className="flex flex-col gap-1">
         <div>
           <Label htmlFor={fields.firstName.id}>First Name</Label>
-          <Input {...getInputProps(fields.firstName, { type: 'text' })} />
-          <p className="text-red-500">{fields.firstName.errors}</p>
+          <Input
+            {...getInputProps(fields.firstName, { type: 'text' })}
+            disabled={isSubmitting}
+          />
+          {fields.firstName.errors ? (
+            <p className="text-red-500">{fields.firstName.errors}</p>
+          ) : (
+            <p className="invisible">placeholder</p>
+          )}
         </div>
         <div>
           <Label htmlFor={fields.lastName.id}>Last Name</Label>
-          <Input {...getInputProps(fields.lastName, { type: 'text' })} />
-          <p className="text-red-500">{fields.lastName.errors}</p>
+          <Input
+            {...getInputProps(fields.lastName, { type: 'text' })}
+            disabled={isSubmitting}
+          />
+          {fields.lastName.errors ? (
+            <p className="text-red-500">{fields.lastName.errors}</p>
+          ) : (
+            <p className="invisible">placeholder</p>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row-reverse gap-2">
-          <Button type="submit">Submit</Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}>
+            Submit
+          </Button>
           <DialogClose asChild>
             <Button
               variant="outline"
-              type="button">
+              type="button"
+              disabled={isSubmitting}>
               Cancel
             </Button>
           </DialogClose>

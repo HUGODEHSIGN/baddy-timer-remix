@@ -12,7 +12,6 @@ import {
 
 import { useNavigate } from '@remix-run/react';
 import { PropsWithChildren, useEffect, useState } from 'react';
-import { $path } from 'remix-routes';
 import { Button } from '~/components/ui/button';
 import {
   Drawer,
@@ -28,32 +27,40 @@ type ResponsiveDialogProps = PropsWithChildren & {
   title: string;
   description: string;
   cancelButton?: string;
+  path?: string;
+  redirect?: boolean;
 };
 
 /**
  * Cancel button is included in this component due to DialogClose issues
+ *
+ * Include path and redirect if you want to redirect upon closing
+ * Redirects to path when redirect prop is true
  */
 export default function ResponsiveAlertDialog({
   children,
   title,
   description,
   cancelButton = 'cancel',
+  path,
+  redirect = false,
 }: ResponsiveDialogProps) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(!redirect);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!open) {
-      const timeout = setTimeout(
-        () => navigate($path('/dashboard/players')),
-        260
-      );
-      return () => clearTimeout(timeout);
-    }
-
+    if (open || !path) return;
+    const timeout = setTimeout(() => navigate(path), 260);
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  useEffect(() => {
+    if (!redirect) return;
+    setOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [redirect]);
 
   if (isDesktop) {
     return (
