@@ -92,14 +92,18 @@ export default function AddPlayerPage() {
       <Form
         method="post"
         {...getFormProps(form)}
-        className="flex flex-col gap-4">
+        className="flex flex-col gap-1">
         <div>
           <Label htmlFor={fields.firstName.id}>First Name</Label>
           <Input
             {...getInputProps(fields.firstName, { type: 'text' })}
             disabled={isSubmitting}
           />
-          <p className="text-red-500">{fields.firstName.errors}</p>
+          {fields.firstName.errors ? (
+            <p className="text-red-500">{fields.firstName.errors}</p>
+          ) : (
+            <p className="invisible">placeholder</p>
+          )}
         </div>
         <div>
           <Label htmlFor={fields.lastName.id}>Last Name</Label>
@@ -107,7 +111,11 @@ export default function AddPlayerPage() {
             {...getInputProps(fields.lastName, { type: 'text' })}
             disabled={isSubmitting}
           />
-          <p className="text-red-500">{fields.lastName.errors}</p>
+          {fields.lastName.errors ? (
+            <p className="text-red-500">{fields.lastName.errors}</p>
+          ) : (
+            <p className="invisible">placeholder</p>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row-reverse gap-2">
           <Button

@@ -48,8 +48,12 @@ export default function _notification() {
   }, [notification]);
   return (
     <>
-      <Outlet />
       <Toaster richColors />
+      <div
+        vaul-drawer-wrapper=""
+        className="bg-white min-h-screen">
+        <Outlet />
+      </div>
     </>
   );
 }

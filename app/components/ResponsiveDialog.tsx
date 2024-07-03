@@ -45,7 +45,7 @@ export default function ResponsiveDialog({
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function handleToast(form: FormMetadata<any>) {
-      if (form.status === 'error' && !form.valid)
+      if (form.status === 'error' && form.valid)
         return toast.error('Please fill out the form entirely', {
           id: form.id,
         });
@@ -80,13 +80,14 @@ export default function ResponsiveDialog({
     return (
       <Drawer
         open={open}
-        onOpenChange={setOpen}>
+        onOpenChange={setOpen}
+        shouldScaleBackground>
         <DrawerContent>
           <DrawerHeader className="text-left">
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription>{description}</DrawerDescription>
           </DrawerHeader>
-          <div className="px-4">{children}</div>
+          <div className="px-4 mb-4">{children}</div>
         </DrawerContent>
       </Drawer>
     );
