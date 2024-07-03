@@ -3,9 +3,7 @@ import { getZodConstraint, parseWithZod } from '@conform-to/zod';
 import { ActionFunctionArgs } from '@remix-run/node';
 import { Form, useActionData, useNavigation } from '@remix-run/react';
 import { generateIdFromEntropySize } from 'lucia';
-import { useEffect } from 'react';
 import { $path } from 'remix-routes';
-import { toast } from 'sonner';
 import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import ResponsiveDialog from '~/components/ResponsiveDialog';
@@ -15,6 +13,8 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { db } from '~/db/drizzle.server';
 import { InsertPlayer, playerTable } from '~/db/schemas/player.server';
+import useToast from '~/hooks/useToast';
+import { ToastData, ToastType } from '~/services/auth/toast';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 type Schema = Pick<InsertPlayer, 'firstName' | 'lastName'>;
@@ -40,8 +40,8 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     if (submission.status !== 'success')
       throw new Error('Please fill out the form entirely');
-    const { user } = await validateRequest(request);
 
+    const { user } = await validateRequest(request);
     invariant(user, 'Unauthorized');
 
     const insertValues: InsertPlayer = {
@@ -52,20 +52,28 @@ export async function action({ request }: ActionFunctionArgs) {
       userId: user.id,
     };
     await db.insert(playerTable).values(insertValues);
-    return submission.reply();
+    return {
+      lastResult: submission.reply(),
+      toast: { type: 'success', message: 'Successfully added player' },
+    };
   } catch (error) {
     console.error(error);
     let message;
     if (error instanceof Error) message = error.message;
-    return submission.reply({
-      formErrors: [message as string],
-    });
+    return {
+      lastResult: submission.reply(),
+      toast: { type: 'error', message },
+    };
   }
 }
 
 export default function AddPlayerPage() {
   const navigation = useNavigation();
-  const lastResult = useActionData<typeof action>();
+
+  const actionData = useActionData<typeof action>();
+
+  const { lastResult, toast } = actionData ?? {};
+
   const [form, fields] = useForm({
     lastResult,
     constraint: getZodConstraint(schema),
@@ -77,18 +85,28 @@ export default function AddPlayerPage() {
 
   const isSubmitting = navigation.state === 'submitting';
 
-  useEffect(() => {
-    if (!isSubmitting) return;
-    toast.loading('...adding', { id: form.id });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSubmitting]);
+  const toastData = new ToastData(
+    'add-player',
+    toast?.type as ToastType,
+    toast?.message
+  );
+
+  if (!form.valid)
+    toastData.setType('error').setMessage('Please fill out the form entirely');
+
+  if (isSubmitting) toastData.setType('loading').setMessage('Adding player...');
+
+  useToast(toastData);
+
+  const redirect = !isSubmitting && toast?.type === 'success';
 
   return (
     <ResponsiveDialog
       title="Add a Player"
       description="Create a new player"
       form={form}
-      path={$path('/dashboard/players')}>
+      path={$path('/dashboard/players')}
+      redirect={redirect}>
       <Form
         method="post"
         {...getFormProps(form)}
