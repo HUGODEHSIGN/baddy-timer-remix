@@ -38,8 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
   });
 
   try {
-    if (submission.status !== 'success')
-      throw new Error('Please fill out the form entirely');
+    if (submission.status !== 'success') throw new Error('Form invalid');
 
     const { user } = await validateRequest(request);
     invariant(user, 'Unauthorized');
@@ -91,8 +90,7 @@ export default function AddPlayerPage() {
     toast?.message
   );
 
-  if (!form.valid)
-    toastData.setType('error').setMessage('Please fill out the form entirely');
+  if (!form.valid) toastData.setType('error').setMessage('Form invalid');
 
   if (isSubmitting) toastData.setType('loading').setMessage('Adding player...');
 
