@@ -38,10 +38,10 @@ export async function action({ request }: ActionFunctionArgs) {
   });
 
   try {
-    if (submission.status !== 'success') throw new Error('Form invalid');
-
     const { user } = await validateRequest(request);
     invariant(user, 'Unauthorized');
+
+    if (submission.status !== 'success') throw new Error('Form invalid');
 
     const insertValues: InsertPlayer = {
       id: generateIdFromEntropySize(10),
