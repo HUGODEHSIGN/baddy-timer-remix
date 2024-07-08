@@ -14,11 +14,11 @@ export default function DashboardLayout() {
   const { primaryPlayer } = useLoaderData<typeof loader>();
   return (
     <>
+      <Outlet />
       <p>
         {primaryPlayer?.firstName}
         {primaryPlayer?.lastName}
       </p>
-      <Outlet />
     </>
   );
 }
