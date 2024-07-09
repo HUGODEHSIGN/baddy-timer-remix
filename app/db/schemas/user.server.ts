@@ -1,16 +1,17 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
-import { location } from '~/db/schemas/location.server';
+import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { locationTable } from '~/db/schemas/location.server';
 
 export const userTable = pgTable('user', {
   id: text('id').primaryKey(),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
-  playerLocationId: text('player_location_id').references(() => location.id, {
-    onDelete: 'set null',
-  }),
-  adminLocationId: text('admin_location_id').references(() => location.id, {
-    onDelete: 'set null',
-  }),
+  admin: boolean('admin').notNull().default(false),
+  playerLocationId: text('player_location_id').references(
+    () => locationTable.id,
+    {
+      onDelete: 'set null',
+    }
+  ),
 });
 
 export const sessionTable = pgTable('session', {

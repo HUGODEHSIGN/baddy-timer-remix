@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { Outlet, useLoaderData } from '@remix-run/react';
+import { Outlet } from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import { getPrimaryPlayer } from '~/services/auth/getPlayers';
 
@@ -11,13 +11,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function DashboardLayout() {
-  const { primaryPlayer } = useLoaderData<typeof loader>();
   return (
     <>
-      <p>
-        {primaryPlayer?.firstName}
-        {primaryPlayer?.lastName}
-      </p>
       <Outlet />
     </>
   );

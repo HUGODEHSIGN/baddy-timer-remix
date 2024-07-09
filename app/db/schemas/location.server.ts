@@ -1,7 +1,9 @@
 import { pgTable, text } from 'drizzle-orm/pg-core';
 
-export const location = pgTable('location', {
+export const locationTable = pgTable('location', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  address: text('address').notNull(),
 });
+
+export type SelectLocation = typeof locationTable.$inferSelect;
+export type InsertLocation = typeof locationTable.$inferInsert;
