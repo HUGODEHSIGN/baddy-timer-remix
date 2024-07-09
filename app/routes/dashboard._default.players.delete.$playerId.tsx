@@ -9,7 +9,7 @@ import { Button } from '~/components/ui/button';
 import { db } from '~/db/drizzle.server';
 import { playerTable } from '~/db/schemas/player.server';
 import useToast from '~/hooks/useToast';
-import { ToastData, ToastType } from '~/services/auth/toast';
+import { ToastData, ToastType } from '~/services/toast';
 
 export async function action({ params }: ActionFunctionArgs) {
   const { playerId } = params;

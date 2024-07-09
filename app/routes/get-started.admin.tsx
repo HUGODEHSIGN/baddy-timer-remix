@@ -1,126 +1,82 @@
-import { getFormProps, getInputProps, useForm } from '@conform-to/react';
-import { getZodConstraint, parseWithZod } from '@conform-to/zod';
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { Form, redirect, useActionData, useNavigation } from '@remix-run/react';
-import { generateIdFromEntropySize } from 'lucia';
+import {
+  Form,
+  redirect,
+  useActionData,
+  useNavigate,
+  useNavigation,
+} from '@remix-run/react';
+import { eq } from 'drizzle-orm';
+import { useEffect } from 'react';
 import { $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
-import { z } from 'zod';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
 import { db } from '~/db/drizzle.server';
-import { adminTable, InsertAdmin } from '~/db/schemas/admin.server';
-import { InsertLocation, locationTable } from '~/db/schemas/location.server';
+import { userTable } from '~/db/schemas/user.server';
 import useToast from '~/hooks/useToast';
-import { ToastData, ToastType } from '~/services/auth/toast';
 import validateRequest from '~/services/auth/validateRequest.server';
-
-type Schema = Pick<InsertLocation, 'name'>;
-
-const schema: z.ZodType<Schema> = z.object({
-  name: z.string(),
-});
+import { ToastData, ToastType } from '~/services/toast';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { session, user } = await validateRequest(request);
-
-  if (!user) throw redirect($path('/login'));
-
-  return { session, user };
+  if (!session || !user) throw redirect('/login');
+  if (user.admin) throw redirect($path('/dashboard/admin'));
+  return null;
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const submission = parseWithZod(formData, {
-    schema,
-  });
+  const { user } = await validateRequest(request);
+
   try {
-    const { user } = await validateRequest(request);
     invariant(user, 'Unauthorized');
 
-    if (submission.status !== 'success') throw new Error('Form invalid');
+    await db
+      .update(userTable)
+      .set({ admin: true })
+      .where(eq(userTable.id, user.id));
 
-    const locationId = generateIdFromEntropySize(10);
-
-    const insertLocationValues: InsertLocation = {
-      id: locationId,
-      name: submission.value.name,
-    };
-
-    const insertAdminValues: InsertAdmin = {
-      userId: user.id,
-      locationId,
-      owner: true,
-      verified: true,
-    };
-
-    await db.transaction(async (tx) => {
-      await tx.insert(locationTable).values(insertLocationValues);
-      await tx.insert(adminTable).values(insertAdminValues);
-    });
     return {
-      lastResult: submission.reply(),
-      toast: { type: 'success', message: 'Successfully added location' },
+      type: 'success',
+      message: 'Congradulations, you are now an admin',
     };
   } catch (error) {
     console.error(error);
     let message;
     if (error instanceof Error) message = error.message;
     return {
-      lastResult: submission.reply(),
-      toast: { type: 'error', message },
+      type: 'error',
+      message,
     };
   }
 }
 
 export default function GetStartedAdminPage() {
   const navigation = useNavigation();
-  const { toast, lastResult } = useActionData<typeof action>() ?? {};
-  const [form, fields] = useForm({
-    lastResult,
-    constraint: getZodConstraint(schema),
-    shouldValidate: 'onBlur',
-    shouldRevalidate: 'onInput',
-    onValidate({ formData }) {
-      return parseWithZod(formData, { schema });
-    },
-  });
-
-  const isSubmitting = navigation.state === 'submitting';
+  const navigate = useNavigate();
+  const actionData = useActionData<typeof action>();
 
   const toastData = new ToastData(
-    'admin-init',
-    toast?.type as ToastType,
-    toast?.message
+    'init-admin',
+    actionData?.type as ToastType,
+    actionData?.message
   );
+  const isSubmitting = navigation.state === 'submitting';
 
-  if (!form.valid) toastData.setType('error').setMessage('Form invalid');
-
-  if (isSubmitting) toastData.setType('loading').setMessage('Adding player...');
+  if (isSubmitting) toastData.setType('loading').setMessage('Loading...');
 
   useToast(toastData);
 
-  const redirect = !isSubmitting && toast?.type === 'success';
+  useEffect(() => {
+    if (!isSubmitting && actionData?.type === 'success')
+      navigate($path('/dashboard/admin'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSubmitting]);
 
   return (
     <>
-      <Form
-        method="post"
-        {...getFormProps(form)}>
-        <div>
-          <Label htmlFor={fields.name.id}>Location Name</Label>
-          <Input
-            {...getInputProps(fields.name, { type: 'text' })}
-            disabled={isSubmitting}
-          />
-          {fields.name.errors ? (
-            <p className="text-red-500">{fields.name.errors}</p>
-          ) : (
-            <p className="invisible">placeholder</p>
-          )}
-        </div>
-        <Button type="submit">Submit</Button>
+      <h2>Are you sure?</h2>
+      <Form method="post">
+        <Button type="submit">Continue</Button>
       </Form>
     </>
   );

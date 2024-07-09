@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { ToastData } from '~/services/auth/toast';
+import { ToastData } from '~/services/toast';
 
 export default function useToast(toastData: ToastData) {
   const { id, type, message } = toastData;

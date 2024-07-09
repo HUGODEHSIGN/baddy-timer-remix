@@ -6,7 +6,7 @@ import Navbar from '~/components/Navbar';
 import { getPlayers } from '~/services/auth/getPlayers';
 
 const exampleMenu = [
-  { display: 'Players', to: $path('/dashboard/players') },
+  { display: 'Locations', to: $path('/dashboard/admin/locations') },
   { display: 'Settings', to: $path('/dashboard/settings') },
 ];
 
@@ -14,13 +14,14 @@ export function loader({ request }: LoaderFunctionArgs) {
   const players = getPlayers(request);
   return players;
 }
-export default function DefaultDashboardLayout() {
+
+export default function AdminDashboardLayout() {
   const { players } = useLoaderData<typeof loader>();
   invariant(players, 'Players not found');
   return (
     <>
       <Navbar
-        logo="Player"
+        logo="Bad:Admin"
         menuItems={exampleMenu}
         selectOptions={players}>
         <Navbar.Select />

@@ -12,27 +12,20 @@ import { DialogClose } from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { db } from '~/db/drizzle.server';
-import { InsertPlayer, playerTable } from '~/db/schemas/player.server';
+import { adminTable } from '~/db/schemas/admin.server';
+import { InsertLocation, locationTable } from '~/db/schemas/location.server';
 import useToast from '~/hooks/useToast';
 import validateRequest from '~/services/auth/validateRequest.server';
 import { ToastData, ToastType } from '~/services/toast';
 
-type Schema = Pick<InsertPlayer, 'firstName' | 'lastName'>;
+type Schema = Pick<InsertLocation, 'name'>;
 
 const schema: z.ZodType<Schema> = z.object({
-  firstName: z
-    .string()
-    .min(2, 'First name is too short')
-    .max(50, 'First name is too long'),
-  lastName: z
-    .string()
-    .min(2, 'Last name is too short')
-    .max(30, 'Last name is too long'),
+  name: z.string(),
 });
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-
   const submission = parseWithZod(formData, {
     schema,
   });
@@ -43,20 +36,28 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (submission.status !== 'success') throw new Error('Form invalid');
 
-    const insertValues: InsertPlayer = {
-      id: generateIdFromEntropySize(10),
-      firstName: submission.value.firstName,
-      lastName: submission.value.lastName,
-      primary: false,
-      userId: user.id,
+    const locationId = generateIdFromEntropySize(10);
+
+    const insertLocationValues: InsertLocation = {
+      id: locationId,
+      name: submission.value.name,
     };
-    await db.insert(playerTable).values(insertValues);
+
+    const insertAdminValues = {
+      userId: user.id,
+      locationId,
+    };
+
+    await db.transaction(async (tx) => {
+      await tx.insert(locationTable).values(insertLocationValues);
+      await tx.insert(adminTable).values(insertAdminValues);
+    });
+
     return {
       lastResult: submission.reply(),
-      toast: { type: 'success', message: 'Successfully added player' },
+      toast: { type: 'success', message: 'Successfully added location' },
     };
   } catch (error) {
-    console.error(error);
     let message;
     if (error instanceof Error) message = error.message;
     return {
@@ -66,7 +67,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 }
 
-export default function AddPlayerPage() {
+export default function AdminAddLocationsPage() {
   const navigation = useNavigation();
 
   const actionData = useActionData<typeof action>();
@@ -83,61 +84,43 @@ export default function AddPlayerPage() {
   });
 
   const isSubmitting = navigation.state === 'submitting';
-
   const toastData = new ToastData(
-    'add-player',
+    'add-location',
     toast?.type as ToastType,
     toast?.message
   );
 
   if (!form.valid) toastData.setType('error').setMessage('Form invalid');
 
-  if (isSubmitting) toastData.setType('loading').setMessage('Adding player...');
+  if (isSubmitting)
+    toastData.setType('loading').setMessage('Adding location...');
 
   useToast(toastData);
 
   const redirect = !isSubmitting && toast?.type === 'success';
 
   return (
-    <ResponsiveDialog
-      title="Add a Player"
-      description="Create a new player"
-      form={form}
-      path={$path('/dashboard/players')}
-      redirect={redirect}>
-      <Form
-        method="post"
-        {...getFormProps(form)}
-        className="flex flex-col gap-1">
-        <div>
-          <Label htmlFor={fields.firstName.id}>First Name</Label>
-          <Input
-            {...getInputProps(fields.firstName, { type: 'text' })}
-            disabled={isSubmitting}
-          />
-          {fields.firstName.errors ? (
-            <p className="text-red-500">{fields.firstName.errors}</p>
+    <>
+      <ResponsiveDialog
+        title="Add a Location"
+        description="Create a new location"
+        form={form}
+        path={$path('/dashboard/admin/locations')}
+        redirect={redirect}>
+        <Form
+          method="post"
+          {...getFormProps(form)}>
+          <Label htmlFor={fields.name.id}>Location Name</Label>
+          <Input {...getInputProps(fields.name, { type: 'text' })} />
+          {fields.name.errors ? (
+            <p className="text-red-500">{fields.name.errors}</p>
           ) : (
             <p className="invisible">placeholder</p>
           )}
-        </div>
-        <div>
-          <Label htmlFor={fields.lastName.id}>Last Name</Label>
-          <Input
-            {...getInputProps(fields.lastName, { type: 'text' })}
-            disabled={isSubmitting}
-          />
-          {fields.lastName.errors ? (
-            <p className="text-red-500">{fields.lastName.errors}</p>
-          ) : (
-            <p className="invisible">placeholder</p>
-          )}
-        </div>
-        <div className="flex flex-col sm:flex-row-reverse gap-2">
           <Button
             type="submit"
             disabled={isSubmitting}>
-            Submit
+            Add
           </Button>
           <DialogClose asChild>
             <Button
@@ -147,8 +130,8 @@ export default function AddPlayerPage() {
               Cancel
             </Button>
           </DialogClose>
-        </div>
-      </Form>
-    </ResponsiveDialog>
+        </Form>
+      </ResponsiveDialog>
+    </>
   );
 }
