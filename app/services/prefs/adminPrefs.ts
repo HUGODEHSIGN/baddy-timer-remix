@@ -1,4 +1,5 @@
 import { createCookie } from '@remix-run/node';
+import getLocations from '~/services/auth/getLocations.server';
 
 export const adminPrefs = createCookie('admin-prefs', {
   path: '/',
@@ -11,5 +12,10 @@ export const adminPrefs = createCookie('admin-prefs', {
 
 export async function getAdminPrefs(request: Request) {
   const cookieHeader = request.headers.get('Cookie');
-  return await adminPrefs.parse(cookieHeader);
+  const adminPrefsCookie = (await adminPrefs.parse(cookieHeader)) ?? {};
+  if (!adminPrefsCookie.locationId) {
+    const locations = await getLocations(request);
+    adminPrefsCookie.locationId = locations[0].id;
+  }
+  return adminPrefsCookie;
 }

@@ -18,9 +18,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const cookieHeader = request.headers.get('Cookie');
   const cookie = (await adminPrefs.parse(cookieHeader)) ?? {};
 
-  if (!cookie.locationId) {
-    cookie.locationId = locations[0].id;
-  }
+  if (!cookie.locationId) cookie.locationId = locations[0].id;
 
   const admin = await db
     .select()
@@ -94,7 +92,7 @@ export default function AdminDashboardLayout() {
         logo="Bad:Admin"
         menuItems={menu}
         selectOptions={selectOptions}
-        selectValue={locationId ?? undefined}
+        selectValue={locationId}
         onValueChange={handleChange}>
         <fetcher.Form method="post">
           <Navbar.Select />
