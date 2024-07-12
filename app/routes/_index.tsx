@@ -2,7 +2,7 @@ import type { MetaFunction } from '@remix-run/node';
 import { useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
 
-import { socket } from '~/socket/socket';
+import { socket } from '~/services/socket/socket';
 
 export const meta: MetaFunction = () => {
   return [

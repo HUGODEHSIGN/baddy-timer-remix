@@ -1,6 +1,5 @@
 import { Link } from '@remix-run/react';
 import { createContext, PropsWithChildren, useContext } from 'react';
-import { Badge } from '~/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -8,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select';
-import { SelectPlayer } from '~/db/schemas/player.server';
 
 type NavLinkProps = PropsWithChildren & {
   display: string;
@@ -25,23 +23,21 @@ function NavLink({ display, to }: NavLinkProps) {
   );
 }
 
-type NavbarProps = PropsWithChildren & {
-  logo: string;
-  selectOptions: Pick<
-    SelectPlayer,
-    'id' | 'firstName' | 'lastName' | 'primary'
-  >[];
-  menuItems: NavLinkProps[];
+type SelectOptions = {
+  id: string;
+  value: string;
+  display: string;
 };
 
-const NavbarContext = createContext<null | {
+type NavbarProps = PropsWithChildren & {
   logo: string;
-  selectOptions: Pick<
-    SelectPlayer,
-    'id' | 'firstName' | 'lastName' | 'primary'
-  >[];
   menuItems: NavLinkProps[];
-}>(null);
+  selectOptions: SelectOptions[];
+  selectValue?: string;
+  onValueChange?: (value: string) => void;
+};
+
+const NavbarContext = createContext<null | NavbarProps>(null);
 
 function useNavbarContext() {
   const context = useContext(NavbarContext);
@@ -55,10 +51,13 @@ export default function Navbar({
   logo,
   selectOptions,
   menuItems,
+  selectValue,
+  onValueChange,
 }: NavbarProps) {
   return (
     <>
-      <NavbarContext.Provider value={{ logo, selectOptions, menuItems }}>
+      <NavbarContext.Provider
+        value={{ logo, selectOptions, menuItems, selectValue, onValueChange }}>
         <header className="bg-card border-b p-4 flex flex-row gap-4 items-center">
           {children}
         </header>
@@ -73,22 +72,23 @@ Navbar.Logo = function NavbarLogo() {
 };
 
 Navbar.Select = function NavbarSelect() {
-  const { selectOptions } = useNavbarContext();
+  const { selectOptions, selectValue, onValueChange } = useNavbarContext();
+
   return (
-    <Select>
+    <Select
+      value={selectValue}
+      onValueChange={onValueChange}
+      name="navbar-select">
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder="Select a player" />
       </SelectTrigger>
       <SelectContent>
-        {selectOptions.map(({ id, firstName, lastName, primary }) => (
+        {selectOptions.map(({ id, value, display }) => (
           <SelectItem
             key={id}
-            value={id}>
+            value={value}>
             <div className="flex flex-row gap-4">
-              <p>
-                {firstName} {lastName}
-              </p>
-              {primary ? <Badge variant="outline">Primary</Badge> : ''}
+              <p>{display}</p>
             </div>
           </SelectItem>
         ))}

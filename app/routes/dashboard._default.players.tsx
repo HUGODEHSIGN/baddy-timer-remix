@@ -3,7 +3,7 @@ import { Link, Outlet, useLoaderData } from '@remix-run/react';
 import { $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
 import { Button } from '~/components/ui/button';
-import { getPlayers } from '~/services/auth/getPlayers';
+import { getPlayers } from '~/services/auth/getPlayers.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { session, user, players } = await getPlayers(request);
