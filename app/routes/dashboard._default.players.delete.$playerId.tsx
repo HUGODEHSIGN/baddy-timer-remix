@@ -2,8 +2,7 @@ import { ActionFunctionArgs } from '@remix-run/node';
 import { Form, useActionData, useNavigation } from '@remix-run/react';
 import { eq } from 'drizzle-orm';
 import { useEffect } from 'react';
-import { $path } from 'remix-routes';
-import invariant from 'tiny-invariant';
+import { $params, $path } from 'remix-routes';
 import ResponsiveAlertDialog from '~/components/ResponsiveAlertDialog';
 import { Button } from '~/components/ui/button';
 import { db } from '~/db/drizzle.server';
@@ -12,10 +11,9 @@ import useToast from '~/hooks/useToast';
 import { ToastData, ToastType } from '~/services/toast';
 
 export async function action({ params }: ActionFunctionArgs) {
-  const { playerId } = params;
+  const { playerId } = $params('/dashboard/players/delete/:playerId', params);
 
   try {
-    invariant(playerId, 'Unauthorized');
     const result = await db
       .delete(playerTable)
       .where(eq(playerTable.id, playerId))
@@ -43,6 +41,7 @@ export async function action({ params }: ActionFunctionArgs) {
 
 export default function DeletePlayerPage() {
   const navigation = useNavigation();
+
   const actionData = useActionData<typeof action>();
   const toastData = new ToastData(
     'delete-player',

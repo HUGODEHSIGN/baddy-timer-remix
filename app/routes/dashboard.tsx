@@ -1,7 +1,7 @@
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { Outlet } from '@remix-run/react';
 import invariant from 'tiny-invariant';
-import { getPrimaryPlayer } from '~/services/auth/getPlayers';
+import { getPrimaryPlayer } from '~/services/auth/getPlayers.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { session, user, primaryPlayer } = await getPrimaryPlayer(request);
