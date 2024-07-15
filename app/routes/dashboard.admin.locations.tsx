@@ -11,18 +11,13 @@ import validateRequest from '~/services/auth/validateRequest.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user } = await validateRequest(request);
+  invariant(user, 'Unauthorized');
 
-  try {
-    invariant(user, 'Unauthorized');
-    const result = await db
-      .select({ location: locationTable })
-      .from(adminTable)
-      .where(eq(adminTable.userId, user.id))
-      .leftJoin(locationTable, eq(adminTable.locationId, locationTable.id));
-    return result;
-  } catch (error) {
-    console.error(error);
-  }
+  return await db
+    .select({ location: locationTable })
+    .from(adminTable)
+    .where(eq(adminTable.userId, user.id))
+    .leftJoin(locationTable, eq(adminTable.locationId, locationTable.id));
 }
 
 export default function AdminLocationsPage() {
