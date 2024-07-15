@@ -1,7 +1,6 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
+import { ActionFunctionArgs } from '@remix-run/node';
 import {
   Form,
-  redirect,
   useActionData,
   useNavigate,
   useNavigation,
@@ -16,13 +15,6 @@ import { userTable } from '~/db/schemas/user.server';
 import useToast from '~/hooks/useToast';
 import validateRequest from '~/services/auth/validateRequest.server';
 import { ToastData, ToastType } from '~/services/toast';
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user } = await validateRequest(request);
-  if (!session || !user) throw redirect('/login');
-  if (user.admin) throw redirect($path('/dashboard/admin'));
-  return null;
-}
 
 export async function action({ request }: ActionFunctionArgs) {
   const { user } = await validateRequest(request);

@@ -1,5 +1,11 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { json, Outlet, useFetcher, useLoaderData } from '@remix-run/react';
+import {
+  json,
+  Outlet,
+  redirect,
+  useFetcher,
+  useLoaderData,
+} from '@remix-run/react';
 import { and, eq } from 'drizzle-orm';
 import { $path } from 'remix-routes';
 import invariant from 'tiny-invariant';
@@ -13,14 +19,15 @@ import { adminPrefs, getAdminPrefs } from '~/services/prefs/adminPrefs';
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user } = await validateRequest(request);
   invariant(user, 'Unauthorized');
+
+  if (!user.admin) throw redirect($path('/dashboard/settings/admin'));
+
   const locations = await getLocations(request);
 
   const cookieHeader = request.headers.get('Cookie');
   const cookie = (await adminPrefs.parse(cookieHeader)) ?? {};
 
-  if (!cookie.locationId) {
-    cookie.locationId = locations[0].id;
-  }
+  if (!cookie.locationId) cookie.locationId = locations[0].id;
 
   const admin = await db
     .select()
@@ -94,7 +101,7 @@ export default function AdminDashboardLayout() {
         logo="Bad:Admin"
         menuItems={menu}
         selectOptions={selectOptions}
-        selectValue={locationId ?? undefined}
+        selectValue={locationId}
         onValueChange={handleChange}>
         <fetcher.Form method="post">
           <Navbar.Select />

@@ -1,17 +1,13 @@
 import { and, eq } from 'drizzle-orm';
+import invariant from 'tiny-invariant';
 import { db } from '~/db/drizzle.server';
 import { playerTable } from '~/db/schemas/player.server';
 import validateRequest from '~/services/auth/validateRequest.server';
 
 export async function getPlayers(request: Request) {
-  const { session, user } = await validateRequest(request);
+  const { user } = await validateRequest(request);
 
-  if (!user || !session)
-    return {
-      session,
-      user,
-      players: null,
-    };
+  invariant(user, 'Unauthorized');
 
   const players = await db
     .select({
@@ -23,13 +19,13 @@ export async function getPlayers(request: Request) {
     .from(playerTable)
     .where(eq(playerTable.userId, user.id));
 
-  return { session, user, players };
+  return { players };
 }
 
 export async function getPrimaryPlayer(request: Request) {
-  const { session, user } = await validateRequest(request);
+  const { user } = await validateRequest(request);
 
-  if (!user || !session) return { session, user, primaryPlayer: null };
+  invariant(user, 'Unauthorized');
 
   const players = await db
     .select({
@@ -43,7 +39,7 @@ export async function getPrimaryPlayer(request: Request) {
 
   const primaryPlayer = players[0];
 
-  if (!primaryPlayer) return { session, user, primaryPlayer: null };
+  if (!primaryPlayer) return { primaryPlayer: null };
 
-  return { session, user, primaryPlayer };
+  return { primaryPlayer };
 }

@@ -7,27 +7,14 @@ import { Form, useLoaderData } from '@remix-run/react';
 
 import { $path } from 'remix-routes';
 import { Button } from '~/components/ui/button';
-import { db } from '~/db/drizzle.server';
-import { playerTable } from '~/db/schemas/player.server';
-import validateRequest from '~/services/auth/validateRequest.server';
+import { getPrimaryPlayer } from '~/services/auth/getPlayers.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user } = await validateRequest(request);
+  const { primaryPlayer } = await getPrimaryPlayer(request);
 
-  if (!user) throw redirect($path('/login'));
+  if (!primaryPlayer) throw redirect($path('/get-started'));
 
-  const primaryPlayer = await db
-    .select({
-      firstName: playerTable.firstName,
-      lastName: playerTable.lastName,
-    })
-    .from(playerTable);
-
-  if (primaryPlayer.length === 0) throw redirect($path('/login'));
-
-  const { firstName, lastName } = primaryPlayer[0];
-
-  return { session, user, firstName, lastName };
+  return primaryPlayer;
 }
 
 export async function action({ request }: ActionFunctionArgs) {

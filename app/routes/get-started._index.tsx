@@ -1,10 +1,6 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { getZodConstraint, parseWithZod } from '@conform-to/zod';
-import {
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-  redirect,
-} from '@remix-run/node';
+import { ActionFunctionArgs, redirect } from '@remix-run/node';
 import { Form, useActionData } from '@remix-run/react';
 import { generateIdFromEntropySize } from 'lucia';
 import { $path } from 'remix-routes';
@@ -23,14 +19,6 @@ const schema: z.ZodType<Schema> = z.object({
   firstName: z.string(),
   lastName: z.string(),
 });
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user } = await validateRequest(request);
-
-  if (!user) throw redirect($path('/login'));
-
-  return { session, user };
-}
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();

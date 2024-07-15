@@ -6,10 +6,7 @@ import { Button } from '~/components/ui/button';
 import { getPlayers } from '~/services/auth/getPlayers.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user, players } = await getPlayers(request);
-  invariant(session && user, 'User not found');
-
-  return { players };
+  return await getPlayers(request);
 }
 
 export default function PlayersLayout() {
